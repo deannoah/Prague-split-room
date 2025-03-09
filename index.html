@@ -300,7 +300,7 @@ Alex
                 
                 <div class="instructions">
                     <h3><i class="fas fa-info-circle"></i> Instructions</h3>
-                    <p>Enter each person's name on a new line. You can enter between 2 and 12 people. The app will split your group as evenly as possible between the two apartments.</p>
+                    <p>Enter each person's name on a new line. You can enter between 2 and 16 people. The app will split your group as evenly as possible between the two apartments.</p>
                 </div>
                 
                 <div class="error-message" id="errorMessage"></div>
@@ -359,7 +359,7 @@ Alex
                 return;
             }
             
-            if (namesList.length > 12) {
+            if (namesList.length > 16) {
                 errorMessage.textContent = 'Please enter no more than 12 names.';
                 errorMessage.style.display = 'block';
                 return;
