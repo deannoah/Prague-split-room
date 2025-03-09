@@ -300,7 +300,14 @@ Alex
                 
                 <div class="instructions">
                     <h3><i class="fas fa-info-circle"></i> Instructions</h3>
-                    <p>Enter each person's name on a new line. You can enter between 2 and 16 people. The app will split your group as evenly as possible between the two apartments.</p>
+                    <p>Enter each person's name on a new line. You can enter between 2 and 16 people. 
+                       <br><strong>Special rules:</strong>
+                       <br>• If 3 or fewer people: everyone stays in Apartment 1
+                       <br>• If exactly 4 people: split 2 and 2 between apartments
+                       <br>• No apartment will ever have just 1 person
+                       <br>• "Dar" and "Mor" will always be placed in the same apartment
+                       <br>&nbsp;&nbsp;(Also recognizes "דר" and "מור")
+                    </p>
                 </div>
                 
                 <div class="error-message" id="errorMessage"></div>
@@ -368,6 +375,57 @@ Alex
             // Hide error message if validation passes
             errorMessage.style.display = 'none';
             
+            // If 3 or fewer people, put everyone in Apartment 1
+            if (namesList.length <= 3) {
+                const apartment1 = [...namesList];
+                const apartment2 = [];
+                
+                // Display results with animation
+                displayResults(apartment1, apartment2);
+                return;
+            }
+            
+            // Special case for exactly 4 people: split 2 and 2
+            if (namesList.length === 4) {
+                // Check if Dar and Mor are in the list (both English and Hebrew spellings)
+                const hasDar = namesList.some(name => 
+                    name.trim().toLowerCase() === "dar" || name.trim() === "דר");
+                const hasMor = namesList.some(name => 
+                    name.trim().toLowerCase() === "mor" || name.trim() === "מור");
+                
+                // If both Dar and Mor are present, keep them together
+                if (hasDar && hasMor) {
+                    const otherNames = namesList.filter(name => 
+                        (name.trim().toLowerCase() !== "dar" && name.trim() !== "דר") && 
+                        (name.trim().toLowerCase() !== "mor" && name.trim() !== "מור")
+                    );
+                    
+                    // Randomly decide which apartment gets Dar and Mor
+                    if (Math.random() < 0.5) {
+                        const apartment1 = ["Dar", "Mor"];
+                        const apartment2 = otherNames;
+                        displayResults(apartment1, apartment2);
+                    } else {
+                        const apartment1 = otherNames;
+                        const apartment2 = ["Dar", "Mor"];
+                        displayResults(apartment1, apartment2);
+                    }
+                } else {
+                    // Shuffle the names
+                    const shuffledNames = [...namesList];
+                    for (let i = shuffledNames.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
+                    }
+                    
+                    // Split 2 and 2
+                    const apartment1 = shuffledNames.slice(0, 2);
+                    const apartment2 = shuffledNames.slice(2, 4);
+                    displayResults(apartment1, apartment2);
+                }
+                return;
+            }
+            
             // Shuffle the names using Fisher-Yates algorithm
             const shuffledNames = [...namesList];
             for (let i = shuffledNames.length - 1; i > 0; i--) {
@@ -375,12 +433,71 @@ Alex
                 [shuffledNames[i], shuffledNames[j]] = [shuffledNames[j], shuffledNames[i]];
             }
             
+            // Check if Dar and Mor are in the list (both English and Hebrew spellings)
+            const darIndex = shuffledNames.findIndex(name => 
+                name.trim().toLowerCase() === "dar" || name.trim() === "דר");
+            const morIndex = shuffledNames.findIndex(name => 
+                name.trim().toLowerCase() === "mor" || name.trim() === "מור");
+            const hasDarAndMor = darIndex !== -1 && morIndex !== -1;
+            
             // Calculate split point (handling odd numbers)
             const midpoint = Math.floor(shuffledNames.length / 2);
             
             // Split into two apartments
-            const apartment1 = shuffledNames.slice(0, midpoint + (shuffledNames.length % 2));
-            const apartment2 = shuffledNames.slice(midpoint + (shuffledNames.length % 2));
+            let apartment1 = [];
+            let apartment2 = [];
+            
+            if (hasDarAndMor) {
+                // Ensure Dar and Mor are in the same apartment
+                // First, remove them from the shuffled array
+                const specialNames = [];
+                if (darIndex !== -1) {
+                    specialNames.push(shuffledNames.splice(darIndex, 1)[0]);
+                }
+                
+                // Need to recalculate morIndex as removing Dar may have shifted indices
+                const newMorIndex = shuffledNames.findIndex(name => 
+                    name.trim().toLowerCase() === "mor" || name.trim() === "מור");
+                if (newMorIndex !== -1) {
+                    specialNames.push(shuffledNames.splice(newMorIndex, 1)[0]);
+                }
+                
+                // Recalculate midpoint with remaining names
+                const remainingMidpoint = Math.floor(shuffledNames.length / 2);
+                
+                // Split remaining names
+                apartment1 = shuffledNames.slice(0, remainingMidpoint);
+                apartment2 = shuffledNames.slice(remainingMidpoint);
+                
+                // Ensure no apartment has just 1 person
+                if (apartment1.length === 1 && apartment2.length >= 3) {
+                    // Move one person from apartment2 to apartment1
+                    apartment1.push(apartment2.pop());
+                } else if (apartment2.length === 1 && apartment1.length >= 3) {
+                    // Move one person from apartment1 to apartment2
+                    apartment2.push(apartment1.pop());
+                }
+                
+                // Randomly decide which apartment gets Dar and Mor
+                if (Math.random() < 0.5) {
+                    apartment1 = apartment1.concat(specialNames);
+                } else {
+                    apartment2 = apartment2.concat(specialNames);
+                }
+            } else {
+                // Normal split
+                apartment1 = shuffledNames.slice(0, midpoint);
+                apartment2 = shuffledNames.slice(midpoint);
+                
+                // Ensure no apartment has just 1 person
+                if (apartment1.length === 1 && apartment2.length >= 3) {
+                    // Move one person from apartment2 to apartment1
+                    apartment1.push(apartment2.pop());
+                } else if (apartment2.length === 1 && apartment1.length >= 3) {
+                    // Move one person from apartment1 to apartment2
+                    apartment2.push(apartment1.pop());
+                }
+            }
             
             // Display results with animation
             displayResults(apartment1, apartment2);
