@@ -411,10 +411,20 @@ Alex
             
             // Create animation title
             const animTitle = document.createElement('h2');
-            animTitle.textContent = 'Randomly Assigning...';
+            animTitle.textContent = 'Bachelor Party Draw';
             animTitle.style.color = 'white';
-            animTitle.style.marginBottom = '30px';
+            animTitle.style.marginBottom = '10px';
+            animTitle.style.fontSize = '28px';
+            animTitle.style.textShadow = '0 0 10px rgba(255,215,0,0.7)';
             animationContainer.appendChild(animTitle);
+            
+            // Create animation subtitle
+            const animSubtitle = document.createElement('p');
+            animSubtitle.textContent = 'Apartment Assignment Draw';
+            animSubtitle.style.color = 'gold';
+            animSubtitle.style.marginBottom = '20px';
+            animSubtitle.style.fontSize = '18px';
+            animationContainer.appendChild(animSubtitle);
             
             // Create name container
             const nameContainer = document.createElement('div');
@@ -426,6 +436,36 @@ Alex
             
             // Combine all names
             const allNames = [...apartment1, ...apartment2];
+            
+            // Create lottery machine container
+            const lotteryContainer = document.createElement('div');
+            lotteryContainer.style.width = '150px';
+            lotteryContainer.style.height = '150px';
+            lotteryContainer.style.backgroundColor = '#333';
+            lotteryContainer.style.borderRadius = '50%';
+            lotteryContainer.style.position = 'relative';
+            lotteryContainer.style.marginBottom = '25px';
+            lotteryContainer.style.overflow = 'hidden';
+            lotteryContainer.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5), inset 0 -10px 20px rgba(0,0,0,0.3)';
+            lotteryContainer.style.border = '5px solid gold';
+            animationContainer.insertBefore(lotteryContainer, nameContainer);
+            
+            // Create lottery balls (will be animated during the draw)
+            const ballColors = ['#4361ee', '#f72585', '#4cc9f0', '#7209b7', '#3a0ca3', '#4895ef'];
+            const balls = [];
+            
+            for (let i = 0; i < 10; i++) {
+                const ball = document.createElement('div');
+                ball.style.width = '30px';
+                ball.style.height = '30px';
+                ball.style.backgroundColor = ballColors[i % ballColors.length];
+                ball.style.borderRadius = '50%';
+                ball.style.position = 'absolute';
+                ball.style.transform = `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)`;
+                ball.style.transition = 'transform 0.3s';
+                balls.push(ball);
+                lotteryContainer.appendChild(ball);
+            }
             
             // Animation function
             const animateNames = (index) => {
@@ -454,12 +494,38 @@ Alex
                         
                         // Create confetti effect
                         createConfetti();
-                    }, 1000);
+                    }, 500);
                     return;
                 }
                 
+                // Animate lottery balls randomly
+                balls.forEach(ball => {
+                    ball.style.transform = `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)`;
+                });
+                
                 // Current name
                 const name = allNames[index];
+                
+                // Create selected ball that will emerge from the lottery machine
+                const selectedBall = document.createElement('div');
+                selectedBall.style.width = '40px';
+                selectedBall.style.height = '40px';
+                selectedBall.style.backgroundColor = apartment1.includes(name) ? '#4361ee' : '#f72585';
+                selectedBall.style.color = 'white';
+                selectedBall.style.borderRadius = '50%';
+                selectedBall.style.position = 'absolute';
+                selectedBall.style.left = '50%';
+                selectedBall.style.top = '50%';
+                selectedBall.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                selectedBall.style.transition = 'all 0.3s';
+                selectedBall.style.zIndex = '10';
+                selectedBall.style.display = 'flex';
+                selectedBall.style.alignItems = 'center';
+                selectedBall.style.justifyContent = 'center';
+                selectedBall.style.fontWeight = 'bold';
+                selectedBall.style.fontSize = '14px';
+                selectedBall.textContent = index + 1;
+                lotteryContainer.appendChild(selectedBall);
                 
                 // Create name element
                 const nameElem = document.createElement('div');
@@ -473,32 +539,42 @@ Alex
                 nameElem.style.width = '80%';
                 nameElem.style.textAlign = 'center';
                 nameElem.style.transform = 'scale(0)';
-                nameElem.style.transition = 'transform 0.3s, background-color 0.5s';
+                nameElem.style.transition = 'transform 0.2s, background-color 0.3s';
                 nameContainer.appendChild(nameElem);
                 
-                // Appear animation
+                // Ball movement animation
                 setTimeout(() => {
-                    nameElem.style.transform = 'scale(1)';
+                    selectedBall.style.transform = 'translate(-50%, 100px) scale(1)';
                     
-                    // Decision animation
+                    // Appear animation for name
                     setTimeout(() => {
-                        // Check if in apartment 1 or 2
-                        if (apartment1.includes(name)) {
-                            nameElem.style.backgroundColor = '#4361ee';
-                            nameElem.style.color = 'white';
-                            nameElem.textContent = `${name} → Apartment 1`;
-                        } else {
-                            nameElem.style.backgroundColor = '#f72585';
-                            nameElem.style.color = 'white';
-                            nameElem.textContent = `${name} → Apartment 2`;
-                        }
+                        nameElem.style.transform = 'scale(1)';
                         
-                        // Move to next name
+                        // Decision animation
                         setTimeout(() => {
-                            animateNames(index + 1);
-                        }, 800);
-                    }, 1000);
-                }, 300);
+                            // Check if in apartment 1 or 2
+                            if (apartment1.includes(name)) {
+                                nameElem.style.backgroundColor = '#4361ee';
+                                nameElem.style.color = 'white';
+                                nameElem.textContent = `${name} → Apartment 1`;
+                            } else {
+                                nameElem.style.backgroundColor = '#f72585';
+                                nameElem.style.color = 'white';
+                                nameElem.textContent = `${name} → Apartment 2`;
+                            }
+                            
+                            // Remove the selected ball
+                            setTimeout(() => {
+                                selectedBall.remove();
+                                
+                                // Move to next name
+                                setTimeout(() => {
+                                    animateNames(index + 1);
+                                }, 200);
+                            }, 100);
+                        }, 300);
+                    }, 150);
+                }, 150);
             };
             
             // Start animation
@@ -571,4 +647,3 @@ Alex
     </script>
 </body>
 </html>
-// Update app with live animation and new title
